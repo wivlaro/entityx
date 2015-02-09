@@ -209,6 +209,8 @@ public:
   bool operator != (const ComponentHandle<C> &other) const {
     return !(*this == other);
   }
+	
+  Entity::Id id() const { return id_; }
 
 private:
   friend class EntityManager;
