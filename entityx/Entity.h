@@ -212,6 +212,8 @@ public:
 	
   Entity::Id id() const { return id_; }
 
+  Entity entity();
+
 private:
   friend class EntityManager;
 
@@ -980,6 +982,11 @@ template <typename C>
 inline void ComponentHandle<C>::remove() {
   assert(valid());
   manager_->remove<C>(id_);
+}
+
+template <typename C>
+Entity ComponentHandle<C>::entity() {
+  return manager_->get(id_);
 }
 
 
