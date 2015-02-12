@@ -273,10 +273,11 @@ struct BaseComponent {
  *
  * family() is used for registration.
  */
-template <typename Derived>
+template <typename Derived, typename ComponentPool = Pool<Derived>>
 struct Component : public BaseComponent {
  public:
   typedef ComponentHandle<Derived> Handle;
+  typedef ComponentPool Pool;
 
   /// Used internally for registration.
   static Family family();
@@ -585,7 +586,7 @@ class EntityManager : entityx::help::NonCopyable {
     assert(!entity_component_mask_[id.index()].test(family));
 
     // Placement new into the component pool.
-    Pool<C> *pool = accomodate_component<C>();
+    typename C::Pool *pool = accomodate_component<C>();
     new(pool->get(id.index())) C(std::forward<Args>(args) ...);
 
     // Set the bit for this component.
@@ -823,17 +824,17 @@ class EntityManager : entityx::help::NonCopyable {
   }
 
   template <typename T>
-  Pool<T> *accomodate_component() {
+  typename T::Pool *accomodate_component() {
     BaseComponent::Family family = T::family();
     if (component_pools_.size() <= family) {
       component_pools_.resize(family + 1, nullptr);
     }
     if (!component_pools_[family]) {
-      Pool<T> *pool = new Pool<T>();
+      typename T::Pool *pool = new typename T::Pool();
       pool->expand(index_counter_);
       component_pools_[family] = pool;
     }
-    return static_cast<Pool<T>*>(component_pools_[family]);
+    return static_cast<typename T::Pool*>(component_pools_[family]);
   }
 
 
@@ -852,8 +853,8 @@ class EntityManager : entityx::help::NonCopyable {
 };
 
 
-template <typename C>
-BaseComponent::Family Component<C>::family() {
+template <typename C, typename P>
+BaseComponent::Family Component<C,P>::family() {
   static Family family = family_counter_++;
   assert(family < entityx::MAX_COMPONENTS);
   return family;
